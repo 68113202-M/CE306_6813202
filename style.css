@@ -110,11 +110,16 @@
     font-weight:600;
     cursor:pointer;
   }
-  .btn-clear{
-    background:var(--danger);
+  .btn-convert{
+    background:var(--accent);
     color:#fff;
   }
-  .btn-clear:hover{background:var(--danger-dark);}
+  .btn-convert:hover{background:var(--accent-dark);}
+  .btn-clear{
+    background:#f1f5f9;
+    color:var(--text);
+  }
+  .btn-clear:hover{background:#e2e8f0;}
   .updated-time{
     text-align:center;
     font-size:12px;

@@ -36,8 +36,9 @@ const DEFAULT_TO = "USD";
 // เก็บประวัติไว้ในหน่วยความจำ (ไม่ persist ข้ามการโหลดหน้าใหม่)
 let historyList = [];
 
-// flag กันการวนลูปตอนอัปเดตค่าอีกช่องแบบ programmatic
-let isSyncing = false;
+// จำว่าผู้ใช้พิมพ์แก้ไขช่องไหนล่าสุด ("one" หรือ "two")
+// ใช้ตอนกดปุ่ม "แปลงค่า" เพื่อรู้ทิศทางการคำนวณ
+let lastEditedField = "one";
 
 // ---------- DOM references ----------
 const currencyOneSelect = document.getElementById("currency-one");
@@ -46,6 +47,7 @@ const amountOneInput = document.getElementById("amount-one");
 const amountTwoInput = document.getElementById("amount-two");
 const rateText = document.getElementById("rate-text");
 const updatedTimeText = document.getElementById("updated-time");
+const convertBtn = document.getElementById("convert-btn");
 const clearBtn = document.getElementById("clear-btn");
 const swapBtn = document.getElementById("swap-btn");
 const historyUl = document.getElementById("history-list");
@@ -172,24 +174,21 @@ function clearHistory() {
 }
 
 // ---------- Core conversion handlers (bidirectional) ----------
+// ทำงานเมื่อกดปุ่ม "แปลงค่า" เท่านั้น (ไม่แปลงอัตโนมัติทุกครั้งที่พิมพ์)
+// เพื่อไม่ให้เพิ่มประวัติถี่เกินไป
 function convertOneToTwo() {
-  if (isSyncing) return;
   const from = currencyOneSelect.value;
   const to = currencyTwoSelect.value;
   const amount = parseFloat(amountOneInput.value);
 
   if (Number.isNaN(amount)) {
-    isSyncing = true;
     amountTwoInput.value = "";
-    isSyncing = false;
+    updateRateText();
     return;
   }
 
   const result = convert(amount, from, to);
-
-  isSyncing = true;
   amountTwoInput.value = result.toFixed(2);
-  isSyncing = false;
 
   updateRateText();
   updateTimestamp();
@@ -197,46 +196,55 @@ function convertOneToTwo() {
 }
 
 function convertTwoToOne() {
-  if (isSyncing) return;
   const from = currencyOneSelect.value;
   const to = currencyTwoSelect.value;
   const amount = parseFloat(amountTwoInput.value);
 
   if (Number.isNaN(amount)) {
-    isSyncing = true;
     amountOneInput.value = "";
-    isSyncing = false;
+    updateRateText();
     return;
   }
 
   // แปลงย้อนกลับ: จากช่องปลายทาง (to) กลับไปยังช่องต้นทาง (from)
   const result = convert(amount, to, from);
-
-  isSyncing = true;
   amountOneInput.value = result.toFixed(2);
-  isSyncing = false;
 
   updateRateText();
   updateTimestamp();
   addHistoryEntry(result, from, amount, to);
 }
 
-// เมื่อเปลี่ยนสกุลเงิน ให้คำนวณใหม่ตามช่องที่มีค่าอยู่
-function handleCurrencyChange() {
-  if (amountOneInput.value !== "") {
+// กดปุ่ม "แปลงค่า" -> ใช้ field ที่ผู้ใช้แก้ไขล่าสุดเป็นตัวตั้งต้น
+function handleConvertClick() {
+  if (lastEditedField === "two" && amountTwoInput.value !== "") {
+    convertTwoToOne();
+  } else if (amountOneInput.value !== "") {
     convertOneToTwo();
   } else if (amountTwoInput.value !== "") {
     convertTwoToOne();
-  } else {
-    updateRateText();
   }
+}
+
+// แค่จำว่าผู้ใช้กำลังพิมพ์ช่องไหน ไม่คำนวณและไม่เก็บ log ทันที
+function handleAmountOneInput() {
+  lastEditedField = "one";
+}
+
+function handleAmountTwoInput() {
+  lastEditedField = "two";
+}
+
+// เปลี่ยนสกุลเงิน แค่อัปเดตข้อความอัตราแลกเปลี่ยนแบบพรีวิว ไม่เก็บ log
+function handleCurrencyChange() {
+  updateRateText();
 }
 
 function swapCurrencies() {
   const temp = currencyOneSelect.value;
   currencyOneSelect.value = currencyTwoSelect.value;
   currencyTwoSelect.value = temp;
-  handleCurrencyChange();
+  updateRateText();
 }
 
 // ---------- Clear inputs (โจทย์ที่ 3) ----------
@@ -250,13 +258,22 @@ function clearInputs() {
 }
 
 // ---------- Event bindings ----------
-amountOneInput.addEventListener("input", convertOneToTwo);
-amountTwoInput.addEventListener("input", convertTwoToOne);
+amountOneInput.addEventListener("input", handleAmountOneInput);
+amountTwoInput.addEventListener("input", handleAmountTwoInput);
 currencyOneSelect.addEventListener("change", handleCurrencyChange);
 currencyTwoSelect.addEventListener("change", handleCurrencyChange);
 swapBtn.addEventListener("click", swapCurrencies);
+convertBtn.addEventListener("click", handleConvertClick);
 clearBtn.addEventListener("click", clearInputs);
 clearHistoryBtn.addEventListener("click", clearHistory);
+
+// กด Enter ในช่อง input ก็แปลงค่าได้เลย
+amountOneInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") handleConvertClick();
+});
+amountTwoInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") handleConvertClick();
+});
 
 // ---------- Init ----------
 populateCurrencySelects();
