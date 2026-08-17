@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>เครื่องมือแปลงสกุลเงิน</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>เครื่องมือแปลงสกุลเงิน</h1>
+      <p class="subtitle">กรอกจำนวนเงินในช่องใดช่องหนึ่ง อีกช่องจะคำนวณให้อัตโนมัติ</p>
+
+      <div class="field-group">
+        <select id="currency-one"></select>
+        <input type="number" id="amount-one" placeholder="0.00" />
+      </div>
+
+      <div class="swap-row">
+        <button type="button" id="swap-btn" class="swap-btn" title="สลับสกุลเงิน">⇅</button>
+      </div>
+
+      <div class="field-group">
+        <select id="currency-two"></select>
+        <input type="number" id="amount-two" placeholder="0.00" />
+      </div>
+
+      <div class="rate-box" id="rate-text">อัตราแลกเปลี่ยน: ยังไม่มีการคำนวณ</div>
+
+      <div class="btn-row">
+        <button type="button" class="action btn-clear" id="clear-btn">ล้างข้อมูล</button>
+      </div>
+
+      <div class="updated-time" id="updated-time">อัปเดตล่าสุด: -</div>
+    </div>
+
+    <div class="card">
+      <div class="history-header">
+        <h2>ประวัติการแปลงเงินย้อนหลัง 10 รายการล่าสุด</h2>
+        <button type="button" class="btn-clear-history" id="clear-history-btn">ล้างประวัติ</button>
+      </div>
+      <ul id="history-list"></ul>
+      <div class="empty-history" id="empty-history">ยังไม่มีประวัติการแปลงเงิน</div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
